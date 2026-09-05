@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Plan semanal · Hyrox & Fondo</title>
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEW NØVA">
+<meta name="theme-color" content="#14171A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171A;
+    --surface:#1D2226;
+    --surface-2:#242A2F;
+    --border:#2A3036;
+    --text:#ECEAE4;
+    --muted:#8B9198;
+    --accent:#FF5A36;
+    --accent-soft:rgba(255,90,54,.14);
+    --teal:#4FD1C5;
+    --teal-soft:rgba(79,209,197,.14);
+    --gold:#D9A94E;
+    --gold-soft:rgba(217,169,78,.14);
+    --green:#6FCF97;
+    --green-soft:rgba(111,207,151,.14);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:48px;
+  }
+  .shell{max-width:480px;margin:0 auto;padding:0 16px;}
+
+  /* Header */
+  header{padding:24px 16px 16px;max-width:480px;margin:0 auto;}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .eyebrow{color:var(--muted);font-size:13px;margin:0 0 2px;}
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:26px;
+    letter-spacing:.2px;
+    margin:0 0 14px;
+    line-height:1.15;
+  }
+  .icon-btn{
+    flex:0 0 auto;
+    width:38px;height:38px;border-radius:10px;
+    background:var(--surface);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;margin-top:2px;
+  }
+  .icon-btn svg{width:17px;height:17px;stroke:var(--text);}
+  .icon-btn.active{background:var(--accent);border-color:var(--accent);}
+  .icon-btn.active svg{stroke:#1a0d08;}
+  .goals{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .goal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:9px 6px;
+    text-align:center;
+  }
+  .goal .val{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;display:block;}
+  .goal .lab{font-size:10.5px;color:var(--muted);display:block;margin-top:2px;line-height:1.25;}
+
+  /* Day pills */
+  nav.days{
+    position:sticky; top:0; z-index:10;
+    background:var(--bg);
+    padding:12px 16px 10px;
+    display:flex; gap:8px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    border-bottom:1px solid var(--border);
+  }
+  nav.days::-webkit-scrollbar{display:none;}
+  .pill{
+    flex:0 0 auto;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--muted);
+    border-radius:999px;
+    padding:9px 14px;
+    font-size:13.5px;
+    font-weight:600;
+    display:flex; align-items:center; gap:6px;
+    cursor:pointer;
+    transition:background .15s, color .15s, border-color .15s;
+    white-space:nowrap;
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
+  .pill.active{ color:var(--bg); border-color:transparent;}
+  .pill.active .dot{background:var(--bg) !important;}
+
+  main{max-width:480px;margin:0 auto;padding:18px 16px 0;}
+
+  .session-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px;}
+  .session-title{font-family:'Oswald',sans-serif;font-size:21px;font-weight:600;margin:0;}
+  .session-sub{color:var(--muted);font-size:13.5px;margin:4px 0 16px;line-height:1.45;}
+  .badge{
+    font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:7px;
+    white-space:nowrap;
+  }
+
+  [contenteditable="true"]{outline:none;}
+  .editing [contenteditable="true"]{
+    border:1px dashed var(--muted);
+    border-radius:6px;
+    padding:2px 5px;
+    margin:-2px -5px;
+  }
+  .editing [contenteditable="true"]:focus{border-color:var(--accent);}
+  .editing .badge[contenteditable="true"]{padding:4px 8px;}
+
+  .adapt{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface);
+    border:1px dashed var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:16px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .adapt button{
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:7px 11px;
+    font-size:12.5px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+  }
+  .adapt.on{border-style:solid;}
+  .adapt.on button{background:var(--accent);color:#1a0d08;border-color:transparent;}
+
+  .block{margin-bottom:20px;}
+  .block-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .block-title{
+    font-size:12.5px;
+    color:var(--muted);
+    font-weight:600;
+    margin:0;
+    flex:1;
+  }
+  .del-block{
+    flex:0 0 auto;width:20px;height:20px;border-radius:6px;
+    background:var(--surface-2);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;line-height:1;cursor:pointer;
+  }
+  .progress-wrap{
+    height:5px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px;
+  }
+  .progress-bar{height:100%;width:0%;background:var(--accent);transition:width .25s;}
+
+  .item{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px 13px;
+    display:flex;
+    align-items:flex-start;
+    gap:11px;
+    margin-bottom:8px;
+    transition:opacity .2s;
+  }
+  .item.done{opacity:.45;}
+  .item.done .ex-name{text-decoration:line-through;}
+  .check{
+    width:21px;height:21px;border-radius:6px;border:1.5px solid var(--border);
+    flex:0 0 auto;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    background:var(--surface-2);
+  }
+  .check svg{width:13px;height:13px;opacity:0;}
+  .item.done .check{background:var(--accent);border-color:var(--accent);}
+  .item.done .check svg{opacity:1;}
+  .item-body{flex:1;min-width:0;}
+  .ex-name{font-size:14.5px;font-weight:600;margin:0;}
+  .ex-detail{font-size:13px;color:var(--muted);margin:3px 0 0;line-height:1.4;}
+  .del-item{
+    flex:0 0 auto;width:22px;height:22px;border-radius:7px;margin-top:1px;
+    background:var(--surface-2);border:1px solid var(--border);color:var(--muted);
+    font-size:14px;line-height:1;cursor:pointer;
+  }
+
+  .add-row{
+    border:1px dashed var(--border);
+    border-radius:12px;
+    padding:11px 13px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  .add-block-row{margin-top:4px;margin-bottom:20px;}
+
+  .note{
+    font-size:12.5px;
+    color:var(--muted);
+    background:var(--surface);
+    border-left:2px solid var(--accent);
+    border-radius:6px;
+    padding:9px 11px;
+    margin:2px 0 18px;
+    line-height:1.5;
+  }
+
+  .ladder{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 16px;}
+  .rep-box{
+    width:38px;height:38px;border-radius:9px;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;color:var(--muted);
+    cursor:pointer;
+  }
+  .rep-box.done{background:var(--teal);border-color:var(--teal);color:#062824;}
+
+  .paceinput{
+    display:flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:10px 12px;margin-bottom:18px;
+  }
+  .paceinput label{font-size:12.5px;color:var(--muted);flex:1;}
+  .paceinput input{
+    width:76px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:7px;color:var(--text);font-family:'Inter',sans-serif;
+    font-size:14px;padding:6px 8px;text-align:center;
+  }
+
+  .edit-bar{
+    position:sticky;
+    bottom:0;
+    max-width:480px;margin:24px auto 0;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    display:flex;gap:10px;
+  }
+  .edit-bar button{
+    flex:1;
+    border-radius:10px;
+    padding:12px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    border:1px solid var(--border);
+  }
+  .edit-bar .save{background:var(--accent);color:#1a0d08;border-color:transparent;}
+  .edit-bar .done{background:var(--surface-2);color:var(--text);}
+
+  footer{
+    max-width:480px;margin:26px auto 0;padding:0 16px;
+    color:var(--muted);font-size:11.5px;text-align:center;line-height:1.6;
+  }
+
+  ::selection{background:var(--accent);color:#fff;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div>
+      <p class="eyebrow">Semana tipo · fuerza + Hyrox + fondo</p>
+      <h1>Tu plan, un día a la vez</h1>
+    </div>
+    <div class="icon-btn" id="editToggle" title="Editar entrenamientos">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-width="2" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+  <div class="goals">
+    <div class="goal"><span class="val">&lt;40'</span><span class="lab">10K</span></div>
+    <div class="goal"><span class="val">70km</span><span class="lab">Bici dom.</span></div>
+    <div class="goal"><span class="val">2000m</span><span class="lab">Natación fluida</span></div>
+    <div class="goal"><span class="val">6x</span><span class="lab">Vueltas circuito</span></div>
+  </div>
+</header>
+
+<nav class="days" id="dayNav"></nav>
+
+<main id="main"></main>
+
+<footer id="footerNote">Toca el círculo para marcar cada ejercicio · usa "piernas cargadas" si notas fatiga acumulada · los cambios no se guardan al recargar la página salvo que descargues el archivo editado</footer>
+
+<script type="application/json" id="data-store">
+[
+  {
+    "id":"lun", "short":"L", "name":"Lunes", "color":"accent",
+    "title":"Fuerza + core", "badge":"Fuerza",
+    "sub":"Circuito de fuerza básica en formato de vueltas, cerrando con core.",
+    "adaptable":true,
+    "blocks":[
+      { "title":"Circuito · 1 min trabajo / 2 min descanso · 6 vueltas", "items":[
+        {"ex":"Dominadas", "detail":"12 repeticiones"},
+        {"ex":"Press vertical con barra", "detail":"20 repeticiones"},
+        {"ex":"Remo gorila con kettlebells", "detail":"20 repeticiones por brazo"},
+        {"ex":"Apertura de hombros", "detail":"20 repeticiones"}
+      ]},
+      { "title":"Core (10-12 min)", "items":[
+        {"ex":"Plancha", "detail":"4 series al fallo técnico"},
+        {"ex":"Rodillas al pecho colgado", "detail":"4x12"},
+        {"ex":"Pallof press", "detail":"3x12 por lado"}
+      ]}
+    ],
+    "altNote":"Con piernas cargadas: mantén el circuito de tren superior tal cual, pero cambia el core por 15 min de movilidad de cadera y tobillo."
+  },
+  {
+    "id":"mar", "short":"M", "name":"Martes", "color":"gold",
+    "title":"Pista · series 800m", "badge":"Velocidad",
+    "sub":"Fijo cada semana. El objetivo es bajar el ritmo medio hacia 3:59/km para el sub-40.",
+    "adaptable":false,
+    "blocks":[
+      { "title":"Calentamiento", "items":[
+        {"ex":"Trote suave", "detail":"12-15 min"},
+        {"ex":"Movilidad + progresiones", "detail":"4x80m"}
+      ]},
+      { "title":"Serie principal", "items":[
+        {"ex":"8 x 800m", "detail":"Ritmo objetivo 3:10-3:12 por 800m, recuperación 90\"-2' trote suave"}
+      ]},
+      { "title":"Vuelta a la calma", "items":[
+        {"ex":"Trote muy suave", "detail":"10 min"}
+      ]}
+    ],
+    "ladder":8,
+    "ladderLabel":"Marca cada 800m completado a ritmo",
+    "pace":true,
+    "note":"Progresión cada 2-3 semanas: sube a 10x800m o ajusta el tiempo objetivo por serie."
+  },
+  {
+    "id":"mie", "short":"X", "name":"Miércoles", "color":"accent",
+    "title":"Hyrox · puntos débiles", "badge":"Hyrox",
+    "sub":"Carrera comprometida: 400m + estación, rotando 5-6 vueltas. Aquí se construye la resistencia a la fatiga para tus simulacros.",
+    "adaptable":true,
+    "blocks":[
+      { "title":"400m + estación · x5-6 vueltas", "items":[
+        {"ex":"Wallballs", "detail":"20-25 repeticiones"},
+        {"ex":"Zancadas", "detail":"20 repeticiones totales"},
+        {"ex":"Trineo empuje", "detail":"20-25 metros"},
+        {"ex":"Burpees", "detail":"15 repeticiones"}
+      ]}
+    ],
+    "altNote":"Con piernas cargadas: baja el volumen a 3-4 vueltas y cambia zancadas y trineo por burpees y wallballs a menor intensidad, priorizando técnica."
+  },
+  {
+    "id":"jue", "short":"J", "name":"Jueves", "color":"teal",
+    "title":"Natación + movilidad", "badge":"Técnica",
+    "sub":"Foco en técnica y fondo, construyendo hacia los 2000m fluidos.",
+    "adaptable":false,
+    "blocks":[
+      { "title":"Sesión en piscina", "items":[
+        {"ex":"Calentamiento", "detail":"400m suave"},
+        {"ex":"Técnica", "detail":"400m con drills de catch + respiración bilateral"},
+        {"ex":"Serie de fondo", "detail":"6-8 x 100m, salida cada 2' — baja el descanso o sube la distancia cada semana"},
+        {"ex":"Vuelta a la calma", "detail":"200m suave"}
+      ]},
+      { "title":"Movilidad (15 min)", "items":[
+        {"ex":"Cadera", "detail":"Movilidad articular + apertura"},
+        {"ex":"Hombro", "detail":"Rotaciones + banda elástica"}
+      ]}
+    ],
+    "note":"Meta de progresión: enlazar los 2000m fluidos bajando descansos antes que subiendo velocidad."
+  },
+  {
+    "id":"vie", "short":"V", "name":"Viernes", "color":"accent",
+    "title":"Fuerza (variante) + tempo", "badge":"Fuerza",
+    "sub":"Segundo circuito de fuerza con otra combinación, seguido de un rodaje progresivo corto.",
+    "adaptable":true,
+    "blocks":[
+      { "title":"Circuito · mismo formato de vueltas", "items":[
+        {"ex":"Sentadillas", "detail":"15 repeticiones"},
+        {"ex":"Zancadas", "detail":"20 repeticiones"},
+        {"ex":"Chest press", "detail":"15 repeticiones"},
+        {"ex":"Dominadas", "detail":"10 repeticiones"}
+      ]},
+      { "title":"Carrera", "items":[
+        {"ex":"Rodaje progresivo", "detail":"20-25 min, últimos 2km cerca del ritmo objetivo de 10k"}
+      ]}
+    ],
+    "altNote":"Con piernas cargadas: mantén el circuito bajando a 4 vueltas y sustituye el tempo por 20 min de bici suave."
+  },
+  {
+    "id":"sab", "short":"S", "name":"Sábado", "color":"gold",
+    "title":"Doble · simulacro o mantenimiento", "badge":"Variable",
+    "sub":"Cada 3-4 semanas: tu propio simulacro Hyrox completo, sin competir, a sensaciones. El resto de sábados, doble sesión suave.",
+    "adaptable":true,
+    "blocks":[
+      { "title":"Semana de simulacro (cada 3-4 semanas)", "items":[
+        {"ex":"Simulacro Hyrox propio", "detail":"8 estaciones + carreras entre medio, a tu ritmo"}
+      ]},
+      { "title":"Resto de sábados — doble sesión", "items":[
+        {"ex":"AM: fuerza ligera o técnica de carrera", "detail":"Volumen bajo, foco en calidad"},
+        {"ex":"PM: movilidad + core", "detail":"20-25 min"}
+      ]}
+    ],
+    "altNote":"Con piernas cargadas: cancela el simulacro esa semana y quédate solo con la doble sesión suave."
+  },
+  {
+    "id":"dom", "short":"D", "name":"Domingo", "color":"green",
+    "title":"Tirada larga / Bici", "badge":"Fondo",
+    "sub":"Fijo cada semana, alternando entre tirada larga a pie y salida en bici.",
+    "adaptable":false,
+    "blocks":[
+      { "title":"Semana A — Tirada larga", "items":[
+        {"ex":"Rodaje largo", "detail":"12-15km a ritmo controlado, con opción de progresión final"}
+      ]},
+      { "title":"Semana B — Bici", "items":[
+        {"ex":"Salida larga", "detail":"~70km a ritmo aeróbico"}
+      ]}
+    ],
+    "note":"Alterna semana A y semana B para no acumular impacto en las piernas dos domingos seguidos."
+  }
+]
+</script>
+
+<script>
+// Snapshot del HTML original, capturado ANTES de que el JS rellene nav/main.
+// Se usa luego para exportar un archivo nuevo con los datos editados.
+const PRISTINE_HTML = document.documentElement.outerHTML;
+
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+let days = JSON.parse(document.getElementById('data-store').textContent);
+
+const colorMap = {
+  accent: {bg:'var(--accent)', soft:'var(--accent-soft)'},
+  gold: {bg:'var(--gold)', soft:'var(--gold-soft)'},
+  teal: {bg:'var(--teal)', soft:'var(--teal-soft)'},
+  green:{bg:'var(--green)', soft:'var(--green-soft)'},
+};
+
+let activeId = 'lun';
+let editMode = false;
+const adaptState = {};
+const checkState = {};
+const ladderState = {};
+
+function renderNav(){
+  const nav = document.getElementById('dayNav');
+  nav.innerHTML = '';
+  days.forEach(d=>{
+    const c = colorMap[d.color];
+    const pill = document.createElement('div');
+    pill.className = 'pill' + (d.id===activeId ? ' active':'');
+    if(d.id===activeId){ pill.style.background = c.bg; }
+    pill.innerHTML = `<span class="dot" style="background:${c.bg}"></span>${d.name}`;
+    pill.onclick = ()=>{ activeId = d.id; renderNav(); renderMain(); };
+    nav.appendChild(pill);
+  });
+}
+
+function updateProgress(dayId, blockIdx){
+  const bar = document.querySelector(`.progress-bar[data-day="${dayId}"][data-block="${blockIdx}"]`);
+  if(!bar) return;
+  const items = document.querySelectorAll(`.item[data-day="${dayId}"][data-block="${blockIdx}"]`);
+  const total = items.length;
+  const doneCount = [...items].filter(i=>i.classList.contains('done')).length;
+  bar.style.width = total ? (doneCount/total*100)+'%' : '0%';
+}
+
+function setEditToggleStyle(){
+  document.getElementById('editToggle').classList.toggle('active', editMode);
+  document.getElementById('footerNote').style.display = editMode ? 'none' : 'block';
+}
+
+function makeEditable(el, onCommit){
+  el.contentEditable = 'true';
+  el.addEventListener('input', ()=>{ onCommit(el.textContent); });
+}
+
+function renderMain(){
+  const day = days.find(d=>d.id===activeId);
+  const c = colorMap[day.color];
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  main.classList.toggle('editing', editMode);
+
+  const head = document.createElement('div');
+  head.className = 'session-head';
+  const titleWrap = document.createElement('div');
+  const titleEl = document.createElement('p');
+  titleEl.className = 'session-title';
+  titleEl.textContent = day.title;
+  if(editMode) makeEditable(titleEl, v=>{ day.title = v; });
+  titleWrap.appendChild(titleEl);
+  head.appendChild(titleWrap);
+
+  const badgeEl = document.createElement('span');
+  badgeEl.className = 'badge';
+  badgeEl.style.background = c.soft;
+  badgeEl.style.color = c.bg;
+  badgeEl.textContent = day.badge;
+  if(editMode) makeEditable(badgeEl, v=>{ day.badge = v; });
+  head.appendChild(badgeEl);
+  main.appendChild(head);
+
+  const sub = document.createElement('p');
+  sub.className = 'session-sub';
+  sub.textContent = day.sub;
+  if(editMode) makeEditable(sub, v=>{ day.sub = v; });
+  main.appendChild(sub);
+
+  if(day.adaptable){
+    const isOn = !!adaptState[day.id];
+    const adapt = document.createElement('div');
+    adapt.className = 'adapt' + (isOn ? ' on':'');
+    adapt.innerHTML = `<span>${isOn ? 'Modo piernas cargadas activo' : '¿Piernas cargadas hoy?'}</span>
+      <button>${isOn ? 'Volver al plan' : 'Adaptar sesión'}</button>`;
+    adapt.querySelector('button').onclick = ()=>{
+      adaptState[day.id] = !adaptState[day.id];
+      renderMain();
+    };
+    main.appendChild(adapt);
+
+    if(isOn){
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.style.borderLeftColor = c.bg;
+      note.textContent = day.altNote || '';
+      if(editMode) makeEditable(note, v=>{ day.altNote = v; });
+      main.appendChild(note);
+    }
+  }
+
+  if(!day.adaptable || !adaptState[day.id]){
+    day.blocks.forEach((block, bIdx)=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'block';
+
+      const bh = document.createElement('div');
+      bh.className = 'block-head';
+      const bt = document.createElement('p');
+      bt.className = 'block-title';
+      bt.textContent = block.title;
+      if(editMode) makeEditable(bt, v=>{ block.title = v; });
+      bh.appendChild(bt);
+      if(editMode){
+        const delBlock = document.createElement('button');
+        delBlock.className = 'del-block';
+        delBlock.textContent = '×';
+        delBlock.onclick = ()=>{ day.blocks.splice(bIdx,1); renderMain(); };
+        bh.appendChild(delBlock);
+      }
+      wrap.appendChild(bh);
+
+      const pw = document.createElement('div');
+      pw.className = 'progress-wrap';
+      const pb = document.createElement('div');
+      pb.className = 'progress-bar';
+      pb.dataset.day = day.id;
+      pb.dataset.block = bIdx;
+      pb.style.background = c.bg;
+      pw.appendChild(pb);
+      wrap.appendChild(pw);
+
+      block.items.forEach((item, iIdx)=>{
+        const key = `${day.id}-${bIdx}-${iIdx}`;
+        const el = document.createElement('div');
+        el.className = 'item' + (checkState[key] ? ' done':'');
+        el.dataset.day = day.id;
+        el.dataset.block = bIdx;
+
+        const checkEl = document.createElement('div');
+        checkEl.className = 'check';
+        if(checkState[key]){ checkEl.style.background = c.bg; checkEl.style.borderColor = c.bg; }
+        checkEl.innerHTML = CHECK_SVG;
+        checkEl.onclick = ()=>{
+          checkState[key] = !checkState[key];
+          el.classList.toggle('done');
+          checkEl.style.background = checkState[key] ? c.bg : '';
+          checkEl.style.borderColor = checkState[key] ? c.bg : '';
+          updateProgress(day.id, bIdx);
+        };
+        el.appendChild(checkEl);
+
+        const body = document.createElement('div');
+        body.className = 'item-body';
+        const exEl = document.createElement('p');
+        exEl.className = 'ex-name';
+        exEl.textContent = item.ex;
+        const detEl = document.createElement('p');
+        detEl.className = 'ex-detail';
+        detEl.textContent = item.detail;
+        if(editMode){
+          makeEditable(exEl, v=>{ item.ex = v; });
+          makeEditable(detEl, v=>{ item.detail = v; });
+        }
+        body.appendChild(exEl);
+        body.appendChild(detEl);
+        el.appendChild(body);
+
+        if(editMode){
+          const delItem = document.createElement('button');
+          delItem.className = 'del-item';
+          delItem.textContent = '×';
+          delItem.onclick = ()=>{ block.items.splice(iIdx,1); renderMain(); };
+          el.appendChild(delItem);
+        }
+
+        wrap.appendChild(el);
+      });
+
+      if(editMode){
+        const addItem = document.createElement('div');
+        addItem.className = 'add-row';
+        addItem.textContent = '+ Añadir ejercicio';
+        addItem.onclick = ()=>{
+          block.items.push({ex:'Nuevo ejercicio', detail:'Detalle / reps'});
+          renderMain();
+        };
+        wrap.appendChild(addItem);
+      }
+
+      main.appendChild(wrap);
+      requestAnimationFrame(()=>updateProgress(day.id, bIdx));
+    });
+
+    if(editMode){
+      const addBlock = document.createElement('div');
+      addBlock.className = 'add-row add-block-row';
+      addBlock.textContent = '+ Añadir bloque';
+      addBlock.onclick = ()=>{
+        day.blocks.push({title:'Nuevo bloque', items:[]});
+        renderMain();
+      };
+      main.appendChild(addBlock);
+    }
+  }
+
+  if(day.ladder){
+    const lbl = document.createElement('p');
+    lbl.className = 'block-title';
+    lbl.textContent = day.ladderLabel;
+    main.appendChild(lbl);
+
+    const ladder = document.createElement('div');
+    ladder.className = 'ladder';
+    for(let i=1;i<=day.ladder;i++){
+      const key = `${day.id}-rep-${i}`;
+      const box = document.createElement('div');
+      box.className = 'rep-box' + (ladderState[key] ? ' done':'');
+      box.textContent = i;
+      box.onclick = ()=>{
+        ladderState[key] = !ladderState[key];
+        box.classList.toggle('done');
+      };
+      ladder.appendChild(box);
+    }
+    main.appendChild(ladder);
+  }
+
+  if(day.pace){
+    const pi = document.createElement('div');
+    pi.className = 'paceinput';
+    pi.innerHTML = `<label>Ritmo real de hoy (min:seg por 800m)</label><input type="text" placeholder="3:10">`;
+    main.appendChild(pi);
+  }
+
+  if(day.note){
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.style.borderLeftColor = c.bg;
+    note.textContent = day.note;
+    if(editMode) makeEditable(note, v=>{ day.note = v; });
+    main.appendChild(note);
+  }
+
+  renderEditBar();
+}
+
+function renderEditBar(){
+  const existing = document.getElementById('editBar');
+  if(existing) existing.remove();
+  if(!editMode) return;
+  const bar = document.createElement('div');
+  bar.className = 'edit-bar';
+  bar.id = 'editBar';
+  bar.innerHTML = `
+    <button class="done">Terminar edición</button>
+    <button class="save">Guardar cambios (descargar)</button>
+  `;
+  bar.querySelector('.done').onclick = ()=>{ editMode = false; setEditToggleStyle(); renderMain(); };
+  bar.querySelector('.save').onclick = downloadEditedFile;
+  document.body.appendChild(bar);
+}
+
+function downloadEditedFile(){
+  const newJson = JSON.stringify(days, null, 2);
+  const newHtml = PRISTINE_HTML.replace(
+    /(<script type="application\/json" id="data-store">)[\s\S]*?(<\/script>)/,
+    (m, a, b) => a + newJson + b
+  );
+  const blob = new Blob([newHtml], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rutina-hyrox.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('editToggle').onclick = ()=>{
+  editMode = !editMode;
+  setEditToggleStyle();
+  renderMain();
+};
+
+renderNav();
+renderMain();
+</script>
+</body>
+</html>
