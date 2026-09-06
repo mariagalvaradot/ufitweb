@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Modo Estoico — Diario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0D0D0C;
+    --bg-raised:#161615;
+    --bg-input:#131312;
+    --ink:#F2EFE9;
+    --ink-dim:#9C9A93;
+    --hairline:rgba(242,239,233,0.09);
+    --bronze:#A9825A;
+    --bronze-soft:rgba(169,130,90,0.16);
+    --good:#7C9A78;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:#000;
+    display:flex;
+    justify-content:center;
+    font-family:'Inter', -apple-system, sans-serif;
+    color:var(--ink);
+  }
+  .app{
+    width:430px;
+    max-width:100vw;
+    min-height:100vh;
+    background:var(--bg);
+    padding-bottom:60px;
+  }
+
+  /* header */
+  .top{
+    padding:26px 22px 14px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .wordmark{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:13px;
+    letter-spacing:2.5px;
+    color:var(--bronze);
+    text-align:center;
+  }
+  .daynav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    margin-top:10px;
+  }
+  .daynav button{
+    background:none; border:none; color:var(--ink-dim);
+    font-size:20px; cursor:pointer; padding:4px 8px;
+  }
+  .daynav button:disabled{opacity:0.25; cursor:default;}
+  .daycount{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    font-weight:600;
+    text-align:center;
+    min-width:130px;
+  }
+  .datestr{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--ink-dim);
+    margin-top:2px;
+    text-transform:capitalize;
+  }
+  .progress{
+    height:3px;
+    background:var(--hairline);
+    border-radius:2px;
+    margin-top:14px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--bronze);
+    transition:width .3s ease;
+  }
+
+  /* quote */
+  .quote-block{
+    padding:20px 24px;
+    border-bottom:1px solid var(--hairline);
+    background:radial-gradient(circle at 15% 0%, var(--bronze-soft), transparent 55%);
+  }
+  .quote-text{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:16px;
+    line-height:1.5;
+  }
+  .quote-attr{
+    font-size:11.5px;
+    color:var(--ink-dim);
+    margin-top:8px;
+    letter-spacing:0.3px;
+  }
+
+  /* sections */
+  .section{
+    padding:20px 22px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .section-label{
+    font-size:11px;
+    letter-spacing:1.5px;
+    color:var(--bronze);
+    font-weight:600;
+    margin-bottom:12px;
+  }
+  .field-line{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .field-line:last-child{margin-bottom:0;}
+  .field-num{
+    width:16px;
+    font-size:12.5px;
+    color:var(--ink-dim);
+    flex-shrink:0;
+  }
+  input[type="text"]{
+    flex:1;
+    background:var(--bg-input);
+    border:1px solid var(--hairline);
+    border-radius:6px;
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    padding:9px 11px;
+    outline:none;
+  }
+  input[type="text"]:focus{border-color:var(--bronze-soft); border-color:var(--bronze);}
+  textarea{
+    width:100%;
+    background:var(--bg-input);
+    border:1px solid var(--hairline);
+    border-radius:6px;
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    padding:11px;
+    outline:none;
+    resize:vertical;
+    min-height:70px;
+    line-height:1.5;
+  }
+  textarea:focus{border-color:var(--bronze);}
+  .hint{
+    font-size:12px;
+    color:var(--ink-dim);
+    margin-top:6px;
+    line-height:1.4;
+  }
+
+  /* body row */
+  .body-row{
+    display:flex;
+    gap:12px;
+  }
+  .body-card{
+    flex:1;
+    background:var(--bg-input);
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    padding:12px;
+    text-align:center;
+  }
+  .body-card .icon{font-size:18px;}
+  .body-card .label{font-size:11px; color:var(--ink-dim); margin-top:4px;}
+  .toggle{
+    margin-top:8px;
+    width:40px; height:40px;
+    border-radius:50%;
+    border:1.5px solid var(--hairline);
+    background:none;
+    color:var(--ink-dim);
+    font-size:16px;
+    cursor:pointer;
+    margin-left:auto; margin-right:auto;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .toggle.on{
+    border-color:var(--good);
+    color:var(--good);
+    background:rgba(124,154,120,0.12);
+  }
+  .sleep-input{
+    width:100%;
+    margin-top:8px;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--hairline);
+    color:var(--ink);
+    text-align:center;
+    font-family:'Fraunces', serif;
+    font-size:16px;
+    padding:4px 0;
+    outline:none;
+  }
+
+  /* discipline slider */
+  .slider-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  input[type="range"]{
+    flex:1;
+    accent-color:var(--bronze);
+  }
+  .slider-val{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    font-weight:600;
+    width:34px;
+    text-align:center;
+  }
+
+  /* weekly banner */
+  .banner{
+    margin:18px 22px 0;
+    padding:14px 16px;
+    border:1px solid var(--bronze-soft);
+    border-radius:8px;
+    background:var(--bronze-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+  .banner-text{font-size:12.5px; line-height:1.4;}
+  .banner-text b{color:var(--bronze); display:block; font-size:11px; letter-spacing:1px; margin-bottom:2px;}
+  .banner button{
+    background:var(--bronze);
+    color:#0D0D0C;
+    border:none;
+    border-radius:6px;
+    padding:7px 12px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  /* status + footer */
+  .statusline{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    padding:16px 22px 4px;
+    font-size:11.5px;
+    color:var(--ink-dim);
+  }
+  .dot{width:5px; height:5px; border-radius:50%; background:var(--good);}
+
+  /* modal */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.7);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:10;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    width:430px;
+    max-width:100vw;
+    max-height:85vh;
+    overflow-y:auto;
+    background:var(--bg-raised);
+    border-radius:16px 16px 0 0;
+    padding:22px;
+  }
+  .modal-title{
+    font-family:'Fraunces', serif;
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .modal-sub{
+    font-size:12.5px;
+    color:var(--ink-dim);
+    margin-bottom:18px;
+  }
+  .modal-close{
+    display:block;
+    margin:18px auto 0;
+    background:none;
+    border:1px solid var(--hairline);
+    color:var(--ink);
+    border-radius:7px;
+    padding:10px 20px;
+    font-size:13px;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="top">
+    <div class="wordmark">MODO ESTOICO · DIARIO</div>
+    <div class="daynav">
+      <button id="prevDay">‹</button>
+      <div>
+        <div class="daycount" id="dayCount">DÍA 1</div>
+        <div class="datestr" id="dateStr">—</div>
+      </div>
+      <button id="nextDay">›</button>
+    </div>
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="banner" id="weeklyBanner" style="display:none;">
+    <div class="banner-text"><b>REVISIÓN SEMANAL</b>Hoy toca mirar la semana completa.</div>
+    <button id="openWeekly">Abrir</button>
+  </div>
+
+  <div class="quote-block">
+    <div class="quote-text" id="quoteText">—</div>
+    <div class="quote-attr" id="quoteAttr">—</div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">INTENCIÓN DEL DÍA</div>
+    <input type="text" id="intention" placeholder="Hoy me presento a...">
+  </div>
+
+  <div class="section">
+    <div class="section-label">TRES PRIORIDADES</div>
+    <div class="field-line"><span class="field-num">1</span><input type="text" class="priority" data-i="0"></div>
+    <div class="field-line"><span class="field-num">2</span><input type="text" class="priority" data-i="1"></div>
+    <div class="field-line"><span class="field-num">3</span><input type="text" class="priority" data-i="2"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">CUERPO</div>
+    <div class="body-row">
+      <div class="body-card">
+        <div class="icon">🏋️</div>
+        <div class="label">Entrenamiento</div>
+        <button class="toggle" id="trainToggle">✓</button>
+      </div>
+      <div class="body-card">
+        <div class="icon">🌙</div>
+        <div class="label">Horas de sueño</div>
+        <input type="text" class="sleep-input" id="sleepHours" placeholder="7">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">GRATITUD</div>
+    <div class="field-line"><span class="field-num">1</span><input type="text" class="gratitude" data-i="0"></div>
+    <div class="field-line"><span class="field-num">2</span><input type="text" class="gratitude" data-i="1"></div>
+    <div class="field-line"><span class="field-num">3</span><input type="text" class="gratitude" data-i="2"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">CIERRE · VICTORIAS DEL DÍA</div>
+    <textarea id="wins" placeholder="¿Qué has ganado hoy, por pequeño que sea?"></textarea>
+  </div>
+
+  <div class="section">
+    <div class="section-label">CIERRE · LECCIÓN</div>
+    <textarea id="lesson" placeholder="¿Qué te ha enseñado el día de hoy?"></textarea>
+    <div class="hint">Sé concreto. Una lección real vale más que diez frases bonitas.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">DISCIPLINA DE HOY</div>
+    <div class="slider-row">
+      <input type="range" id="disciplineSlider" min="1" max="10" value="7">
+      <div class="slider-val" id="disciplineVal">7</div>
+    </div>
+  </div>
+
+  <div class="statusline"><span class="dot"></span><span id="statusText">Guardado en este dispositivo</span></div>
+
+</div>
+
+<div class="modal-overlay" id="weeklyModal">
+  <div class="modal">
+    <div class="modal-title">Revisión Semanal</div>
+    <div class="modal-sub">Cada 7 días, un paso atrás para ver el conjunto.</div>
+
+    <div class="section-label" style="margin-top:6px;">LO QUE FUNCIONÓ</div>
+    <textarea id="weekWorked" placeholder="¿Qué hábito o decisión te dio buenos resultados?"></textarea>
+
+    <div class="section-label" style="margin-top:16px;">LO QUE HAY QUE CORTAR</div>
+    <textarea id="weekCut" placeholder="¿Qué te ha restado disciplina o foco esta semana?"></textarea>
+
+    <div class="section-label" style="margin-top:16px;">AJUSTE PARA LA PRÓXIMA SEMANA</div>
+    <textarea id="weekAdjust" placeholder="Un solo cambio concreto, no una lista de propósitos."></textarea>
+
+    <button class="modal-close" id="closeWeekly">Cerrar</button>
+  </div>
+</div>
+
+<script>
+const QUOTES = [
+  ["Lo que está en tu mano es tu juicio sobre las cosas, no las cosas mismas.", "Inspirado en Epicteto"],
+  ["No busques que las cosas ocurran como quieres, sino desea que ocurran como ocurren.", "Inspirado en Epicteto"],
+  ["El obstáculo en el camino se convierte en el camino.", "Inspirado en Marco Aurelio"],
+  ["No pierdas más tiempo discutiendo cómo debe ser un hombre bueno. Sé uno.", "Inspirado en Marco Aurelio"],
+  ["No es que tengamos poco tiempo, es que perdemos mucho.", "Inspirado en Séneca"],
+  ["Ningún viento es favorable para quien no sabe a qué puerto se dirige.", "Inspirado en Séneca"],
+  ["Sufrimos más en la imaginación que en la realidad.", "Inspirado en Séneca"],
+  ["Domina tus impulsos y tendrás dominado casi todo.", "Inspirado en Epicteto"],
+  ["La disciplina de hoy es la libertad de mañana.", "Modo Estoico"],
+  ["Levántate y haz el trabajo del ser humano.", "Inspirado en Marco Aurelio"],
+  ["Primero dite a ti mismo qué quieres ser, y luego haz lo que tengas que hacer.", "Inspirado en Epicteto"],
+  ["No cuentes los días, haz que los días cuenten.", "Modo Estoico"],
+  ["La calma no se encuentra, se entrena.", "Modo Estoico"],
+  ["Aguanta y renuncia.", "Inspirado en Epicteto"],
+  ["Un hombre sabio saca más provecho de sus enemigos que un necio de sus amigos.", "Inspirado en Marco Aurelio"],
+  ["Confórmate con actuar y guarda silencio.", "Inspirado en Marco Aurelio"],
+  ["Empieza por el cuerpo. La mente disciplinada empieza por hábitos disciplinados.", "Modo Estoico"],
+  ["Nada dura tanto como para no poder soportarlo un momento más.", "Inspirado en Séneca"],
+  ["No dejes que el ruido del mundo apague tu propia voz.", "Modo Estoico"],
+  ["Cada mañana es una nueva oportunidad de empezar de cero.", "Inspirado en Marco Aurelio"]
+];
+
+function hashDate(dateStr){
+  let h = 0;
+  for(let i=0;i<dateStr.length;i++){ h = (h*31 + dateStr.charCodeAt(i)) >>> 0; }
+  return h;
+}
+
+function fmtDate(d){
+  return d.toISOString().slice(0,10);
+}
+
+function readableDate(d){
+  return d.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' });
+}
+
+const STORAGE_PREFIX = 'estoico_entry_';
+const START_KEY = 'estoico_start_date';
+
+let startDate = localStorage.getItem(START_KEY);
+if(!startDate){
+  startDate = fmtDate(new Date());
+  localStorage.setItem(START_KEY, startDate);
+}
+const startDateObj = new Date(startDate + 'T00:00:00');
+
+let currentDate = new Date();
+currentDate.setHours(0,0,0,0);
+
+const els = {
+  dayCount: document.getElementById('dayCount'),
+  dateStr: document.getElementById('dateStr'),
+  progressFill: document.getElementById('progressFill'),
+  quoteText: document.getElementById('quoteText'),
+  quoteAttr: document.getElementById('quoteAttr'),
+  intention: document.getElementById('intention'),
+  priorities: document.querySelectorAll('.priority'),
+  trainToggle: document.getElementById('trainToggle'),
+  sleepHours: document.getElementById('sleepHours'),
+  gratitudes: document.querySelectorAll('.gratitude'),
+  wins: document.getElementById('wins'),
+  lesson: document.getElementById('lesson'),
+  disciplineSlider: document.getElementById('disciplineSlider'),
+  disciplineVal: document.getElementById('disciplineVal'),
+  statusText: document.getElementById('statusText'),
+  weeklyBanner: document.getElementById('weeklyBanner'),
+  openWeekly: document.getElementById('openWeekly'),
+  closeWeekly: document.getElementById('closeWeekly'),
+  weeklyModal: document.getElementById('weeklyModal'),
+  weekWorked: document.getElementById('weekWorked'),
+  weekCut: document.getElementById('weekCut'),
+  weekAdjust: document.getElementById('weekAdjust'),
+  prevDay: document.getElementById('prevDay'),
+  nextDay: document.getElementById('nextDay')
+};
+
+function dayNumber(d){
+  const diff = Math.round((d - startDateObj) / 86400000) + 1;
+  return diff;
+}
+
+function loadEntry(dateKey){
+  const raw = localStorage.getItem(STORAGE_PREFIX + dateKey);
+  return raw ? JSON.parse(raw) : {
+    intention:'', priorities:['','',''], trained:false, sleep:'',
+    gratitude:['','',''], wins:'', lesson:'', discipline:7,
+    weekWorked:'', weekCut:'', weekAdjust:''
+  };
+}
+
+function saveEntry(){
+  const dateKey = fmtDate(currentDate);
+  const data = {
+    intention: els.intention.value,
+    priorities: Array.from(els.priorities).map(i=>i.value),
+    trained: els.trainToggle.classList.contains('on'),
+    sleep: els.sleepHours.value,
+    gratitude: Array.from(els.gratitudes).map(i=>i.value),
+    wins: els.wins.value,
+    lesson: els.lesson.value,
+    discipline: els.disciplineSlider.value,
+    weekWorked: els.weekWorked.value,
+    weekCut: els.weekCut.value,
+    weekAdjust: els.weekAdjust.value
+  };
+  localStorage.setItem(STORAGE_PREFIX + dateKey, JSON.stringify(data));
+  els.statusText.textContent = 'Guardado en este dispositivo';
+}
+
+function render(){
+  const dateKey = fmtDate(currentDate);
+  const dn = dayNumber(currentDate);
+  els.dayCount.textContent = 'DÍA ' + dn;
+  els.dateStr.textContent = readableDate(currentDate);
+
+  const cyclePos = ((dn - 1) % 90 + 90) % 90 + 1;
+  els.progressFill.style.width = (cyclePos / 90 * 100) + '%';
+
+  const q = QUOTES[hashDate(dateKey) % QUOTES.length];
+  els.quoteText.textContent = '"' + q[0] + '"';
+  els.quoteAttr.textContent = q[1];
+
+  const entry = loadEntry(dateKey);
+  els.intention.value = entry.intention;
+  els.priorities.forEach((el,i)=> el.value = entry.priorities[i] || '');
+  els.trainToggle.classList.toggle('on', !!entry.trained);
+  els.sleepHours.value = entry.sleep || '';
+  els.gratitudes.forEach((el,i)=> el.value = entry.gratitude[i] || '');
+  els.wins.value = entry.wins;
+  els.lesson.value = entry.lesson;
+  els.disciplineSlider.value = entry.discipline || 7;
+  els.disciplineVal.textContent = entry.discipline || 7;
+  els.weekWorked.value = entry.weekWorked || '';
+  els.weekCut.value = entry.weekCut || '';
+  els.weekAdjust.value = entry.weekAdjust || '';
+
+  els.weeklyBanner.style.display = (dn % 7 === 0) ? 'flex' : 'none';
+  els.nextDay.disabled = fmtDate(currentDate) === fmtDate(new Date());
+  els.statusText.textContent = 'Guardado en este dispositivo';
+}
+
+let saveTimer;
+function scheduleSave(){
+  els.statusText.textContent = 'Escribiendo…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveEntry, 500);
+}
+
+[els.intention, els.sleepHours, els.wins, els.lesson, els.weekWorked, els.weekCut, els.weekAdjust]
+  .forEach(el => el.addEventListener('input', scheduleSave));
+els.priorities.forEach(el => el.addEventListener('input', scheduleSave));
+els.gratitudes.forEach(el => el.addEventListener('input', scheduleSave));
+
+els.trainToggle.addEventListener('click', ()=>{
+  els.trainToggle.classList.toggle('on');
+  scheduleSave();
+});
+
+els.disciplineSlider.addEventListener('input', ()=>{
+  els.disciplineVal.textContent = els.disciplineSlider.value;
+  scheduleSave();
+});
+
+els.prevDay.addEventListener('click', ()=>{
+  currentDate.setDate(currentDate.getDate() - 1);
+  render();
+});
+els.nextDay.addEventListener('click', ()=>{
+  if(fmtDate(currentDate) === fmtDate(new Date())) return;
+  currentDate.setDate(currentDate.getDate() + 1);
+  render();
+});
+
+els.openWeekly.addEventListener('click', ()=> els.weeklyModal.classList.add('open'));
+els.closeWeekly.addEventListener('click', ()=>{ els.weeklyModal.classList.remove('open'); saveEntry(); });
+
+render();
+</script>
+
+</body>
+</html>
