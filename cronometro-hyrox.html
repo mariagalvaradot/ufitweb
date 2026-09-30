@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cronómetro Hyrox</title>
+<style>
+:root{color-scheme:dark;--ink:#f5f6f7;--mut:#a4abb6;--acc:#ffd400;--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.4 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(900px 500px at 8% -8%,rgba(255,212,0,.13),transparent 60%),radial-gradient(800px 500px at 100% 0,rgba(80,110,255,.14),transparent 55%),#0d0f12;background-attachment:fixed}
+header{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;padding:.8rem 1rem;background:rgba(13,15,18,.6);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--edge)}
+#title{flex:1 1 220px;min-width:0;background:none;border:0;outline:0;color:var(--ink);font-size:1.3rem;font-weight:800}
+.hint{flex:1 1 100%;margin:0;color:var(--mut);font-size:.82rem}
+button,select,input{font:inherit}
+button{cursor:pointer;color:var(--ink);background:var(--glass);border:1px solid var(--edge);border-radius:12px;padding:.55rem .9rem;font-weight:700;transition:transform .08s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.35;cursor:default}
+.hot,.go{color:#111;border-color:transparent;background:linear-gradient(135deg,#ffe95c,#ffb000 60%,#ff8a00);box-shadow:0 6px 18px rgba(255,170,0,.25)}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;max-width:1600px;margin:0 auto;padding:1rem}
+.card{display:flex;flex-direction:column;gap:.65rem;padding:1rem;border-radius:20px;border:1px solid var(--edge);background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.03));-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);box-shadow:0 12px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.14)}
+.card.run{border-color:rgba(255,212,0,.75);box-shadow:0 0 34px rgba(255,180,0,.22),0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14)}
+.card.pause{border-color:rgba(90,200,250,.75);box-shadow:0 0 34px rgba(90,200,250,.2),0 12px 32px rgba(0,0,0,.5)}
+.card.fin{border-color:rgba(47,224,138,.7)}
+.top{display:flex;align-items:center;gap:.5rem}
+.n{flex:none;display:grid;place-items:center;width:2.3rem;height:2.3rem;border-radius:50%;font-weight:800;color:#111;background:linear-gradient(135deg,#ffe95c,#ff8a00)}
+input[type=text],input[type=time],select{min-width:0;color:var(--ink);background:var(--glass);border:1px solid var(--edge);border-radius:10px;padding:.4rem .5rem}
+.top input[type=text]{flex:1;font-weight:700}
+.opts{display:flex;gap:.5rem}
+.opts select{flex:1}
+select option{background:#1a1d22;color:#fff}
+.t{font-size:2.9rem;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#fff,#aeb6c3);-webkit-background-clip:text;background-clip:text;color:transparent}
+.run .t{background-image:linear-gradient(90deg,#fff3a0,#ffd400 50%,#ff9f1a)}
+.pause .t{background-image:linear-gradient(90deg,#d6f1ff,#5ac8fa)}
+.fin .t{background-image:linear-gradient(90deg,#c8ffe3,#2fe08a)}
+.seg{display:flex;gap:.5rem;align-items:baseline;color:var(--mut);font-size:.95rem;font-variant-numeric:tabular-nums}
+.seg b{flex:1;color:var(--ink)}
+.bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,#ffd400,#ff8a00)}
+.btns{display:flex;flex-wrap:wrap;gap:.5rem}
+.go{flex:1 1 100%;padding:.9rem .6rem;font-size:1.05rem}
+.pz{flex:1}
+details{font-size:.9rem}
+summary{cursor:pointer;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td{padding:.25rem 0;border-bottom:1px solid var(--edge)}
+td:last-child{text-align:right}
+</style>
+</head>
+<body>
+<header>
+  <input id="title" aria-label="Título del evento">
+  <button id="imp" class="hot">Importar CSV</button>
+  <button id="csv">Descargar CSV</button>
+  <button id="wipe">Reiniciar todo</button>
+  <p class="hint">Importar CSV: columnas hora, nombre, tipo, carrera (separador ; o ,). Después puedes editar todo a mano.</p>
+</header>
+<input type="file" id="file" accept=".csv,.txt,text/csv" hidden>
+<main id="grid"></main>
+
+<script>
+/* ========== CONFIGURACIÓN: edita aquí ========== */
+const CONFIG = {
+  titulo:  'Hyrox: cronómetro de salidas',
+  salidas: 10,   // nº de salidas por defecto (al importar un CSV se ajusta a sus filas)
+  // Orden de las pruebas. Entre cada una se intercala una carrera (salvo en "Solo workout")
+  pruebas: ['1 km SkiErg', '50 m Sled Push', '60 Burpees', '1 km Remo', '200 m Farmer Carry', '80 Lunges', '100 Wall Balls'],
+  // Opciones de carrera por salida. La PRIMERA = sin carreras
+  carreras: ['Solo workout', '300 m', '500 m', '1 km'],
+  tipos: ['Individual', 'Pareja'],
+  porDefecto: { tipo: 'Individual', carrera: '1 km' }
+};
+/* =============================================== */
+
+const KEY = 'hyrox2:' + JSON.stringify(CONFIG.pruebas);
+const SIN = CONFIG.carreras[0];
+// start = salida dada · since = último "seguir" (null si está en pausa) · acc = tiempo acumulado antes de la pausa
+// marks = tiempo activo (sin pausas) al terminar cada tramo
+const nueva = () => ({ hora: '', nombre: '', tipo: CONFIG.porDefecto.tipo, carrera: CONFIG.porDefecto.carrera, start: null, since: null, acc: 0, marks: [] });
+
+// Estado guardado en el navegador: si se recarga la página, los tiempos siguen
+let S = null;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+if (!S || !S.w || S.cfg !== CONFIG.salidas) S = { cfg: CONFIG.salidas, titulo: CONFIG.titulo, w: Array.from({ length: CONFIG.salidas }, nueva) };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+const segs = w => CONFIG.pruebas.flatMap(p => w.carrera === SIN ? [p] : ['Carrera ' + w.carrera, p]);
+const el = (w, now = Date.now()) => w.acc + (w.since ? now - w.since : 0);   // tiempo activo
+const eta = h => { if (!h) return null; const [a, b] = h.split(':'), d = new Date(); d.setHours(+a, +b, 0, 0); return d - Date.now(); };
+
+const p2 = n => String(n).padStart(2, '0');
+function fmt(ms, dec) {
+  ms = Math.max(0, ms);
+  const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+  return (h ? h + ':' + p2(m) : m) + ':' + p2(s % 60) + (dec ? '.' + Math.floor(ms / 100) % 10 : '');
+}
+
+// ----- Importar CSV -----
+const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const metros = s => { const m = String(s).match(/(\d+(?:[.,]\d+)?)\s*(km|k)?/i); if (!m) return null; const n = parseFloat(m[1].replace(',', '.')); return (m[2] || n < 10) ? n * 1000 : n; };
+const cut = (l, s) => { const o = []; let c = '', q = false; for (const ch of l) { if (ch === '"') q = !q; else if (ch === s && !q) { o.push(c); c = ''; } else c += ch; } o.push(c); return o.map(x => x.trim()); };
+
+function fix(o) {   // normaliza hora, tipo y carrera a las opciones de CONFIG
+  const h = String(o.hora).match(/(\d{1,2})\s*[:.hH]\s*(\d{2})/);
+  o.hora = h ? p2(h[1]) + ':' + h[2] : '';
+  o.tipo = CONFIG.tipos.find(t => norm(t).slice(0, 3) === norm(o.tipo).slice(0, 3)) || CONFIG.porDefecto.tipo;
+  const v = norm(o.carrera);
+  o.carrera = /solo|sin|workout/.test(v) ? SIN : CONFIG.carreras.find(c => metros(c) !== null && metros(c) === metros(v)) || CONFIG.porDefecto.carrera;
+  return o;
+}
+
+function importCSV(text) {
+  const lines = text.replace(/^\ufeff/, '').split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return;
+  const sep = [';', '\t', ','].reduce((a, b) => lines[0].split(b).length > lines[0].split(a).length ? b : a);
+  const rows = lines.map(l => cut(l, sep));
+  const key = c => { const h = norm(c); return /hora|salida|start/.test(h) ? 'hora' : /tipo|formato/.test(h) ? 'tipo' : /carrera|run|distancia|modalidad|categor/.test(h) ? 'carrera' : /nombre|equipo|atleta|name/.test(h) ? 'nombre' : null; };
+  let cols = ['hora', 'nombre', 'tipo', 'carrera'];      // orden por defecto si no hay cabecera
+  const head = rows[0].map(key);
+  if (head.filter(Boolean).length >= 2) { cols = head; rows.shift(); }
+  const ws = rows.filter(r => r.some(Boolean)).slice(0, 60).map(r => {
+    const o = nueva();
+    cols.forEach((k, j) => { if (k && r[j] !== undefined) o[k] = r[j]; });
+    return fix(o);
+  });
+  if (!ws.length) return;
+  if (S.w.some(w => w.start !== null) && !confirm('Hay salidas en marcha. ¿Sustituirlas por las del CSV?')) return;
+  S.w = ws; save(); render();
+}
+
+// ----- Tarjetas -----
+const grid = document.getElementById('grid');
+const opts = (arr, v) => arr.map(o => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('');
+function render() {
+  grid.innerHTML = '';
+  S.w.forEach((w, i) => {
+    const c = document.createElement('section');
+    c.className = 'card'; c.id = 'c' + i;
+    c.innerHTML = `
+      <div class="top"><span class="n">${i + 1}</span>
+        <input type="text" data-k="nombre" placeholder="Nombre / equipo">
+        <input type="time" data-k="hora" title="Hora de salida"></div>
+      <div class="opts">
+        <select data-k="tipo">${opts(CONFIG.tipos, w.tipo)}</select>
+        <select data-k="carrera">${opts(CONFIG.carreras, w.carrera)}</select>
+      </div>
+      <div class="t"></div>
+      <div class="seg"></div>
+      <div class="bar"><i></i></div>
+      <div class="btns">
+        <button class="go"></button>
+        <button class="pz"></button>
+        <button class="undo" title="Deshacer último parcial">↩</button>
+        <button class="rst" title="Reiniciar esta salida">⟲</button>
+      </div>
+      <details><summary>Parciales</summary><table></table></details>`;
+    c.querySelector('[data-k=nombre]').value = w.nombre;
+    c.querySelector('[data-k=hora]').value = w.hora;
+    grid.append(c);
+    paint(i);
+  });
+}
+
+const idx = e => +e.closest('.card').id.slice(1);
+
+grid.addEventListener('input', e => {
+  const k = e.target.dataset.k;
+  if (!k) return;
+  S.w[idx(e.target)][k] = e.target.value;
+  save();
+  if (k !== 'nombre' && k !== 'hora') paint(idx(e.target));
+});
+
+grid.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const i = idx(b), w = S.w[i], now = Date.now(), cl = b.classList;
+  if (cl.contains('go')) {
+    if (w.start === null) { w.start = now; w.since = now; w.acc = 0; }          // Salida
+    else if (w.since && w.marks.length < segs(w).length) {                      // Fin del tramo actual
+      const t = el(w, now);
+      if (t - (w.marks[w.marks.length - 1] || 0) < 2000) return;                // anti doble toque
+      w.marks.push(t);
+    }
+  } else if (cl.contains('pz')) {                                               // Pausa / Seguir
+    if (w.since) { w.acc += now - w.since; w.since = null; } else w.since = now;
+  } else if (cl.contains('undo')) {
+    w.marks.pop();
+  } else if (cl.contains('rst')) {
+    if (!confirm('¿Reiniciar la salida ' + (i + 1) + '?')) return;
+    Object.assign(w, { start: null, since: null, acc: 0, marks: [] });
+  }
+  save(); paint(i);
+});
+
+// Botones, barra y tabla de parciales (solo cuando algo cambia)
+function paint(i) {
+  const w = S.w[i], c = document.getElementById('c' + i), sg = segs(w), n = w.marks.length;
+  const started = w.start !== null, fin = started && n === sg.length, paused = started && !fin && !w.since;
+  c.classList.toggle('run', started && !fin && !paused);
+  c.classList.toggle('pause', paused);
+  c.classList.toggle('fin', fin);
+  c.querySelectorAll('select').forEach(s => s.disabled = started);
+  const go = c.querySelector('.go'), pz = c.querySelector('.pz');
+  go.disabled = fin || paused;
+  go.textContent = !started ? '▶ Salida' : fin ? '🏁 Terminado' : paused ? '⏸ En pausa' : '✓ Fin: ' + sg[n];
+  pz.disabled = !started || fin;
+  pz.textContent = paused ? '▶ Seguir' : '⏸ Pausa';
+  c.querySelector('.undo').disabled = !n;
+  c.querySelector('.rst').disabled = !started;
+  c.querySelector('.bar i').style.width = (n / sg.length * 100) + '%';
+  c.querySelector('table').innerHTML = w.marks.map((m, k) =>
+    `<tr><td>${sg[k]}</td><td>${fmt(m - (k ? w.marks[k - 1] : 0), 1)}</td></tr>`).join('');
+  tick();
+}
+
+// Relojes: se calculan con la hora real, así no se desvían aunque la pestaña se congele
+function tick() {
+  const now = Date.now();
+  S.w.forEach((w, i) => {
+    const c = document.getElementById('c' + i), sg = segs(w), n = w.marks.length;
+    const t = c.querySelector('.t'), seg = c.querySelector('.seg');
+    if (w.start === null) {
+      const e = eta(w.hora);
+      t.textContent = '0:00';
+      seg.innerHTML = `<span>${sg.length} tramos</span><b>${e === null ? 'Listo para salir' : e > 0 ? 'Sale en ' + fmt(e) : 'Ya es su hora'}</b>`;
+      return;
+    }
+    const fin = n === sg.length, cur = el(w, now), last = n ? w.marks[n - 1] : 0;
+    t.textContent = fmt(fin ? last : cur, fin);
+    seg.innerHTML = fin
+      ? `<span>${n}/${n}</span><b>Tiempo total</b>`
+      : `<span>${n + 1}/${sg.length}</span><b>${sg[n]}${w.since ? '' : ' (en pausa)'}</b><span>${fmt(cur - last, 1)}</span>`;
+  });
+}
+
+// ----- Cabecera -----
+const ti = document.getElementById('title');
+ti.value = S.titulo; document.title = S.titulo;
+ti.oninput = () => { S.titulo = ti.value; document.title = ti.value; save(); };
+
+const file = document.getElementById('file');
+document.getElementById('imp').onclick = () => file.click();
+file.onchange = async () => { if (file.files[0]) importCSV(await file.files[0].text()); file.value = ''; };
+
+document.getElementById('wipe').onclick = () => {
+  if (!confirm('¿Reiniciar los tiempos de TODAS las salidas?')) return;
+  S.w.forEach(w => Object.assign(w, { start: null, since: null, acc: 0, marks: [] }));
+  save(); render();
+};
+
+// CSV con ";" y BOM para que Excel en español lo abra bien
+document.getElementById('csv').onclick = () => {
+  const rows = [['Salida', 'Hora', 'Nombre', 'Tipo', 'Carrera', 'Tramo', 'Parcial', 'Acumulado']];
+  S.w.forEach((w, i) => {
+    const sg = segs(w);
+    w.marks.forEach((m, k) => rows.push([i + 1, w.hora, w.nombre, w.tipo, w.carrera, sg[k],
+      fmt(m - (k ? w.marks[k - 1] : 0), 1), fmt(m, 1)]));
+  });
+  const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'hyrox-resultados.csv';
+  a.click();
+};
+
+render();
+setInterval(tick, 100);
+</script>
+</body>
+</html>
